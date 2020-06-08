@@ -201,7 +201,7 @@ class Materials:
 	MAT_LAVA = [ 11 ] # Lava
 	MAT_SOLID = [ 3, 1, 12, 4 ] # Dirt, stone, sand, cobblestone
 	MATS_LIB = [ MAT_WATER, MAT_WOOD, MAT_ORE, MAT_LAVA, MAT_SOLID ]
-	MAT_IGNORE = [ 18, 161, 31, 38, 175, 0, 9, 11 ] # Things that should be ignored for landscape height determination
+	MAT_IGNORE = [ 18, 161, 31, 38, 175, 0 ] # Things that should be ignored for landscape height determination
 
 class Structures:
 	PATH = 1
@@ -681,7 +681,7 @@ def setBlockToGround(level, position, material):
 	keepGoing = True
 	while keepGoing and y >= 0:
 		blockID = level.blockAt(x, y, z)
-		if blockID in Materials.MAT_IGNORE:
+		if blockID in Materials.MAT_IGNORE or blockID in Materials.MAT_WATER or blockID in Materials.MAT_LAVA:
 			level.setBlockAt(x, y, z, mID)
 			level.setBlockDataAt(x, y, z, mData)
 		else:
