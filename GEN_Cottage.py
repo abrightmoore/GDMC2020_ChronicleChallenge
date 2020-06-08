@@ -6,6 +6,8 @@ from pymclevel import BoundingBox
 from random import randint, random
 
 def create(generatorName, level, boxGlobal, box, agents, allStructures, materialScans, agent):
+	print "Building a Cottage at", box," by ",str(agent)
+	
 	# What types of blocks may I use for construction?
 	resourceList = Settlevolver.findResourcesCloseToMe(((box.minx+box.maxx)>>1,(box.minz+box.maxz)>>1), materialScans, 8)
 	
@@ -35,6 +37,7 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	# Each level of the house
 	y = box.miny+1
 	while y < box.maxy:
+		print "Building level",y
 		levelheight = randint(4,6)
 		levelminx = box.minx+1
 		levelminy = y
@@ -52,15 +55,19 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 			leveldepth = randint(4, leveldepth)
 			gapdepth = randint(0,(depth-leveldepth)>>1)
 
+		print "Laying the floor"
 		box_floor = BoundingBox((levelminx+gapwidth,levelminy,levelminz+gapdepth),(levelwidth,1,leveldepth))
 		Settlevolver.fill(level, box_floor, MAT_FLOOR)
 		
+		print "Placing the walls"
 		box_walls = BoundingBox((levelminx+gapwidth,levelminy+1,levelminz+gapdepth),(levelwidth,levelheight-2,leveldepth))
 		Settlevolver.agentFill(agent, level, box_walls)
 
+		print "Hanging the ceiling"
 		box_ceiling = BoundingBox((levelminx+gapwidth,levelminy+levelheight-1,levelminz+gapdepth),(levelwidth,1,leveldepth))
 		Settlevolver.fill(level, box_ceiling, MAT_FLOOR)
 
+		print "Attaching the trim"
 		box_upright = BoundingBox((levelminx+gapwidth,levelminy+1,levelminz+gapdepth),(1,levelheight-2,1))
 		Settlevolver.fill(level, box_upright, MAT_FLOOR)
 		Settlevolver.setBlockToGround(level, (levelminx+gapwidth,levelminy-1,levelminz+gapdepth), MAT_FLOOR)
@@ -74,14 +81,16 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 		Settlevolver.fill(level, box_upright, MAT_FLOOR)
 		Settlevolver.setBlockToGround(level, (levelminx+gapwidth,levelminy-1,levelminz+gapdepth+leveldepth-1), MAT_FLOOR)
 		
+		print "Carving the interior"
 		box_interior = BoundingBox((levelminx+gapwidth+1,levelminy+1,levelminz+gapdepth+1),(levelwidth-2,levelheight-2,leveldepth-2))
 		Settlevolver.fill(level, box_interior, MAT_AIR)
 		areas.append(box_interior)
 
+		print "Adding the roof"
 		# Add a graded roof
 		keepGoingRoof = True
 		roofCounter = 0
-		while keepGoingRoof or roofCounter > 8:
+		while keepGoingRoof or roofCounter < 8:
 			roofWidthHere = box_ceiling.maxx-box_ceiling.minx+2-2*roofCounter
 			roofDepthHere = box_ceiling.maxz-box_ceiling.minz+2-2*roofCounter
 			if roofWidthHere > 0 and roofDepthHere > 0:
@@ -93,4 +102,5 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 			
 
 		y += levelheight-1
+	print "Built!"
 	return areas # These are all the rooms
