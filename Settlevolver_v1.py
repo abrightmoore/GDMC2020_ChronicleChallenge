@@ -262,7 +262,7 @@ class Agent:
 		self.age += 1
 		
 		chanceOfDeath = float(self.age)/84.0
-		if random() > chanceOfDeath:
+		if random() < chanceOfDeath:
 			self.alive = False
 			self.deathdate = time.localtime()
 			eventLog.addEvent("[DIED] "+str(self))
@@ -457,8 +457,9 @@ def perform(level, box, options):
 						# Find a location to build a farm
 						# eventLog.addEvent("[PLAN] "+str(agent)+" Thought about building a farm")
 						# print str(agent),"Build a farm"
-						potentialStructureSize = randint(8,12),randint(5,16),randint(8,12)
+						potentialStructureSize = randint(16,32),randint(5,16),randint(16,32)
 						structureType = Structures.FARM
+						
 					elif resourceBlockID in Materials.MAT_LAVA:
 						# Find a location to build a Blacksmith
 						#print str(agent),"Build a blacksmith"
@@ -474,7 +475,7 @@ def perform(level, box, options):
 					elif resourceBlockID in Materials.MAT_ORE:
 						# Find a location to build a Mine shaft
 						#print str(agent),"Build a mine"
-						potentialStructureSize = randint(8,16),randint(5,16),randint(8,16)
+						potentialStructureSize = randint(16,24),randint(5,16),randint(16,24)
 						structureType = Structures.MINE
 
 					elif resourceBlockID in Materials.MAT_SOLID:
@@ -630,6 +631,7 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 	areas = []
 	
 	for agent, t, b in allStructures:
+		print "Building the structures created by",agent.name
 		generatorName = "GEN_"+Structures.Names[t]
 		module = __import__(generatorName)
 		areas = module.create(generatorName, level, box, b, agents, allStructures, materialScans, agent) # This attempts to invoke the create() method on the nominated generator
