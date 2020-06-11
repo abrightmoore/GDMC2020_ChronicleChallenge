@@ -19,7 +19,7 @@ import time
 
 import pygame
 from pygame import Surface
-from pymclevel import alphaMaterials, BoundingBox
+from pymclevel import alphaMaterials, BoundingBox, TAG_List, TAG_Byte, TAG_Int, TAG_Compound, TAG_Short, TAG_Float, TAG_Double, TAG_String, TAG_Long
 import random
 from random import random, randint
 from math import pi, sin, cos, atan2, sqrt
@@ -28,6 +28,11 @@ inputs = (
 		("Settlevolver", "label"),
 		("Time limit (Seconds)", 60),
 		("Number of agents", 4),
+		("Resource hunt radius", 4),
+		("Chance to build", 0.18),
+		("Chance of child", 0.2),
+		("Breeding range", 8),
+		("Seconds per year", 10),
 		("adrian@theworldfoundry.com", "label"),
 		("http://theworldfoundry.com", "label"),
 )
@@ -195,13 +200,13 @@ def nameRandom():
 	return FNAMES[randint(0,len(FNAMES))-1], SNAMES[randint(0,len(SNAMES))-1]
 
 class Materials:
-	MAT_WATER = [ 9 ] # Water
+	MAT_WATER = [ 9, 79 ] # Water, Ice
 	MAT_WOOD = [ 5, 17, 162, 99, 100, 5, 265] # Oak, leaves, Dark oak, Mushroom, Mushroom(Red), planks, stripped oak
 	MAT_ORE = [ 73, 14, 15, 56 ] # Redstone, gold, iron, diamond, coal
 	MAT_LAVA = [ 11 ] # Lava
 	MAT_SOLID = [ 3, 1, 12, 4 ] # Dirt, stone, sand, cobblestone
 	MATS_LIB = [ MAT_WATER, MAT_WOOD, MAT_ORE, MAT_LAVA, MAT_SOLID ]
-	MAT_IGNORE = [ 18, 161, 31, 38, 175, 0 ] # Things that should be ignored for landscape height determination
+	MAT_IGNORE = [ 18, 161, 31, 38, 175, 0, 79, 78 ] # Things that should be ignored for landscape height determination
 
 class Structures:
 	PATH = 1
@@ -237,17 +242,19 @@ class Agent:
 		self.structures = structures
 		self.alive = True
 		self.deathdate = None
+		self.direction = 2.0*pi*random()
+		self.speed = 1.5+1.0*random()
 		# Each agent has their own 'style' of building, determined by an interference pattern
 		self.pattern = []
 		for i in xrange(0,randint(2,5)):
 			px = random()*16
 			py = random()*16
 			pz = random()*16
-			wavelength = random()*8
-			amplitude = 0.3+random()*0.7
+			wavelength = random()*8.0
+			amplitude = 0.4+random()*0.6
 			self.pattern.append((px,py,pz,wavelength,amplitude))
 		self.materials = []
-		baseMaterials = [ 236, 159, 35 ] # Concrete
+		baseMaterials = [ 251, 159, 35 ] # Concrete is 238 on bedrock
 		baseMaterialID = baseMaterials[randint(0,len(baseMaterials)-1)]
 		for i in xrange(0,randint(2,5)):
 			self.materials.append((baseMaterialID,randint(0,15)))
@@ -261,7 +268,7 @@ class Agent:
 	def doBirthday(self, eventLog):
 		self.age += 1
 		
-		chanceOfDeath = float(self.age)/84.0
+		chanceOfDeath = float(self.age)/100.0
 		if random() < chanceOfDeath:
 			self.alive = False
 			self.deathdate = time.localtime()
@@ -304,7 +311,7 @@ def findResourcesCloseToMe(pos, materialScans, searchRadius):
 	keepGoing = True
 	while count > 0 and keepGoing == True:
 		count -= 1
-		list = materialScans[randint(0,len(materialScans)-3)]  # Exclude the heights list (and 'solid list')
+		list = materialScans[randint(0,len(materialScans)-2)]  # Exclude the heights list #(and 'solid list')
 		if len(list) > 0:
 			resource = list[randint(0,len(list)-1)] # Possible duplicates, so sue me...
 			if resource not in resources: # Expensive? Omit if required
@@ -365,7 +372,7 @@ def checkForCollisions(A,listOfStructures):
 	
 	return result
 
-def tryToPlaceStructure(level, box, allStructures, potentialStructureSize, potentialStructureLocation, resource):
+def tryToPlaceStructure(level, box, allStructures, potentialStructureSize, potentialStructureLocation, resource, recurse):
 	(resourceBlockID, resourceBlockData), (resourceX, resourceY, resourceZ) = resource
 	szx,szy,szz = potentialStructureSize
 	pslx, psly, pslz = potentialStructureLocation
@@ -386,14 +393,15 @@ def tryToPlaceStructure(level, box, allStructures, potentialStructureSize, poten
 				for t,b in collidesWith:
 					if b.maxy > topY:
 						topBox = b
-				if topBox != newBox: # Found a new box. Try to place this one on top of it.
-					tryToPlaceStructure(level, box, allStructures, potentialStructureSize, (pslx, topY, pslz), resource)
+				if topBox != newBox and recurse == True: # Found a new box. Try to place this one on top of it.
+					tryToPlaceStructure(level, box, allStructures, potentialStructureSize, (pslx, topY, pslz), resource, recurse)
 				else:
 					return None # We cannot place this box, sadly.
 
 
 def perform(level, box, options):
 	print "perform"
+	BUILDCHANCE = options["Chance to build"]
 
 	width = box.maxx-box.minx
 	depth = box.maxz-box.minz
@@ -443,7 +451,8 @@ def perform(level, box, options):
 		for agent in agents:		
 			if agent.alive == True:
 				keepGoing = True
-				searchRadius = 4
+				searchRadius = options["Resource hunt radius"]
+
 				localResources = findResourcesCloseToMe(agent.pos, materialScans, searchRadius)
 				if len(localResources) > 0:
 					# Choose a resource type near to the player
@@ -453,55 +462,64 @@ def perform(level, box, options):
 					structureType = Structures.PATH
 					# Build something... what? Determine what to build based on something in the landscape.
 					(resourceBlockID, resourceBlockData), (resourceX, resourceY, resourceZ) = resource
-					if resourceBlockID in Materials.MAT_WATER:
+					if random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_WATER:
 						# Find a location to build a farm
 						# eventLog.addEvent("[PLAN] "+str(agent)+" Thought about building a farm")
 						# print str(agent),"Build a farm"
 						potentialStructureSize = randint(16,32),randint(5,16),randint(16,32)
 						structureType = Structures.FARM
 						
-					elif resourceBlockID in Materials.MAT_LAVA:
+					elif random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_LAVA:
 						# Find a location to build a Blacksmith
 						#print str(agent),"Build a blacksmith"
 						potentialStructureSize = randint(8,12),randint(5,8),randint(8,12)
 						structureType = Structures.BLACKSMITH
 						
-					elif resourceBlockID in Materials.MAT_WOOD:
+					elif random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_WOOD:
 						# Find a location to build a Cottage... start here?
 						#print str(agent),"Build a cottage"
 						potentialStructureSize = randint(6,12),randint(5,16),randint(6,12)
 						structureType = Structures.COTTAGE
 
-					elif resourceBlockID in Materials.MAT_ORE:
+					elif random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_ORE:
 						# Find a location to build a Mine shaft
 						#print str(agent),"Build a mine"
 						potentialStructureSize = randint(16,24),randint(5,16),randint(16,24)
 						structureType = Structures.MINE
 
-					elif resourceBlockID in Materials.MAT_SOLID:
+					elif random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_SOLID:
 						# Find a location to build a Castle/Tower
 						# ... possibly a temple up high
 						#print str(agent),"Build a castle, tower, or temple"
 						potentialStructureSize = randint(16,32),randint(16,32),randint(16,32)
 						structureType = Structures.MEGA
-
+					else:
+						potentialStructureSize = 3,3,3
+						structureType = Structures.PATH
+					
 					szx,szy,szz = potentialStructureSize
-					potentialStructureLocation = resourceX+randint(-szx,szx),-1,resourceZ+randint(-szz,szz)
+					potentialStructureLocation = resourceX,-1,resourceZ
+					if structureType != Structures.PATH:
+						potentialStructureLocation = resourceX+randint(-szx,szx),-1,resourceZ+randint(-szz,szz)
 					pslx, psly, pslz = potentialStructureLocation					
 					y = getHeightHere(level, box, pslx+(szx>>1), pslz+(szz>>1))
-					newBox = tryToPlaceStructure(level, box, allStructures, potentialStructureSize, (pslx, y, pslz), resource)
+					newBox = BoundingBox((pslx, y, pslz),potentialStructureSize)
+					if structureType != Structures.PATH:
+						newBox = tryToPlaceStructure(level, box, allStructures, potentialStructureSize, (pslx, y, pslz), resource, True)
+					
 					
 					if newBox is not None:
 						allStructures.append((agent,structureType,newBox))
 						agent.structures.append((structureType,newBox))
-						eventLog.addEvent("[BUILD] "+str(agent)+" Built a "+Structures.Names[structureType]+" of dimension "+str(newBox))
+						if structureType != Structures.PATH:
+							eventLog.addEvent("[BUILD] "+str(agent)+" Built a "+Structures.Names[structureType]+" of dimension "+str(newBox))
 					
-				# Move somewhere else to try again/ Brownian motion.
+				# Move somewhere else to try again/ (was Brownian motion)
 				x,z = agent.pos
-				direction = random()*2.0*pi
-				distance = 2.0
-				dx = distance*cos(direction)
-				dz = distance*sin(direction)
+				agent.direction += 2.0*pi/72-random()*(2.0*pi/36) # 2 degrees shift left/right
+				distance = agent.speed
+				dx = distance*cos(agent.direction)
+				dz = distance*sin(agent.direction)
 				agent.pos = (int(x+dx-box.minx)%width)+box.minx, (int(z+dz-box.minz)%depth)+box.minz
 				if False: # Debug = plot the agent's position as a block in the sky
 					x,z = agent.pos
@@ -509,7 +527,7 @@ def perform(level, box, options):
 					level.setBlockDataAt(x,255,z,2) # Debug
 		
 		# New year celebrations followed by possible baby agents!
-		if now-lastTime > 10: # seconds in a simulation year
+		if now-lastTime > options["Seconds per year"]: # seconds in a simulation year
 			countAgents = 0
 			for agent in agents:		
 				if agent.alive == True:
@@ -519,25 +537,26 @@ def perform(level, box, options):
 			eventLog.addEvent("[TIME] Happy New Year!" )
 		
 			babyAgents = []
-			birthProximity = 4
+			birthProximity = options["Breeding range"]
+			birthProximity2 = birthProximity*birthProximity
 			for agent in agents: # Check proximity
 				for agent2 in agents: # Check proximity
-					if agent != agent2 and agent.alive == True and agent2.alive == True and agent.sname != agent2.sname:
+					if agent != agent2 and agent.alive == True and agent2.alive == True and agent.sname != agent2.sname and agent.age > 18 and agent2.age > 18:
 						x,z = agent.pos
 						x2,z2 = agent2.pos
 						dx = x-x2
 						dz = z-z2
 						dist2 = dx*dx+dz*dz
-						if dist2 < birthProximity and random() <= 0.001:
+						if dist2 < birthProximity2 and random() <= options["Chance of child"]:
 							fname, sname = nameRandom()
 							sname = agent.sname+"-"+agent2.sname # Convention - hyphenated surname of both parents
 							name = fname+" "+sname # Duplicates allowed
 							babyx = (x+x2)>>1	# Midpoint
 							babyz = (z+z2)>>1	# Midpoint
-							age = 5
+							age = 5 # Youngsters have to work for a living in this cruel world
 							birthdate = time.localtime()
 							structuresList = []
-							newAgent = Agent(fname, sname, (x,z), age, birthdate, structuresList)
+							newAgent = Agent(fname, sname, (babyx,babyz), age, birthdate, structuresList)
 							babyAgents.append(newAgent) # Metadata for each agent
 							keepGoing = True
 			for baby in babyAgents:
@@ -631,10 +650,14 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 	areas = []
 	
 	for agent, t, b in allStructures:
-		print "Building the structures created by",agent.name
 		generatorName = "GEN_"+Structures.Names[t]
 		module = __import__(generatorName)
 		areas = module.create(generatorName, level, box, b, agents, allStructures, materialScans, agent) # This attempts to invoke the create() method on the nominated generator
+		if t != Structures.PATH:
+			print "Built the structure created by",agent.name
+			y = getHeightHere(level, box, b.minx, b.minz)
+			texts = [ "Designed", "and built by", agent.fname, agent.sname, ]
+			createSign(level, b.minx, y+1, b.minz, texts)
 		
 		
 
@@ -687,3 +710,45 @@ def setBlockToGround(level, position, material):
 		else:
 			keepGoing = False
 		y -= 1
+		
+def chopBoundingBoxRandom2D(A):
+	width = A.maxx-A.minx
+	depth = A.maxz-A.minz
+	height = A.maxy-A.miny
+	result = []
+	B = None
+	C = None
+
+	if width > depth:
+		B = BoundingBox((A.minx,A.miny,A.minz),(width>>1,height,depth))
+		C = BoundingBox((A.minx+(width>>1),A.miny,A.minz),(width>>1,height,depth))
+	else:
+		B = BoundingBox((A.minx,A.miny,A.minz),(width,height,depth>>1))
+		C = BoundingBox((A.minx,A.miny,A.minz+(depth>>1)),(width,height,depth>>1))
+	
+	return [ B, C ]
+		
+def createSign(level, x, y, z, texts): #abrightmoore - convenience method. Due to Jigarbov - this is not a Sign.
+	# This is Java only. Bedrock has one line of text with line breaks.
+	CHUNKSIZE = 16
+	STANDING_SIGN = 63
+	
+	level.setBlockAt(x,y,z,STANDING_SIGN)
+	level.setBlockDataAt(x,y,z,randint(0,15))
+	#setBlock(level, (STANDING_SIGN,randint(0,15)), x, y, z)
+	level.setBlockDataAt(x,y-1,z,1)
+	level.setBlockDataAt(x,y-1,z,0)
+	#setBlock(level, (1,0), x, y-1, z)
+	control = TAG_Compound()
+	control["id"] = TAG_String("Sign")
+	control["Text1"] = TAG_String(texts[0])
+	control["Text2"] = TAG_String(texts[1])
+	control["Text3"] = TAG_String(texts[2])
+	control["Text4"] = TAG_String(texts[3])
+	
+	control["x"] = TAG_Int(x)
+	control["y"] = TAG_Int(y)
+	control["z"] = TAG_Int(z)
+	chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
+	chunka.TileEntities.append(control)
+	chunka.dirty = True

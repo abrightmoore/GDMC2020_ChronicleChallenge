@@ -15,7 +15,7 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	
 	areas = [] # These are 'rooms' that need to be populated afterwards.
 	
-	MAT_FOUNDATION = 98,0
+	MAT_FOUNDATION = 98,0 # stone bricks on Bedrock and Java 1.12.2
 	MAT_TRIM = 4,0
 	MAT_WALL = 5,0
 	MAT_WINDOW = 20,0
@@ -86,19 +86,20 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 		Settlevolver.fill(level, box_interior, MAT_AIR)
 		areas.append(box_interior)
 
-		print "Adding the roof"
-		# Add a graded roof
-		keepGoingRoof = True
-		roofCounter = 0
-		while keepGoingRoof or roofCounter < 8:
-			roofWidthHere = box_ceiling.maxx-box_ceiling.minx+2-2*roofCounter
-			roofDepthHere = box_ceiling.maxz-box_ceiling.minz+2-2*roofCounter
-			if roofWidthHere > 0 and roofDepthHere > 0:
-				box_roof = BoundingBox((box_ceiling.minx-1+roofCounter,box_ceiling.miny+1+roofCounter,box_ceiling.minz-1+roofCounter),(roofWidthHere,1,roofDepthHere))
-				Settlevolver.fill(level, box_roof, MAT_ROOF)
-			else:
-				keepGoingRoof = False
-			roofCounter += 1
+		if generatorName != "GEN_Mine": # No roof on the mine building
+			print "Adding the roof"
+			# Add a graded roof
+			keepGoingRoof = True
+			roofCounter = 0
+			while keepGoingRoof or roofCounter < 8:
+				roofWidthHere = box_ceiling.maxx-box_ceiling.minx+2-2*roofCounter
+				roofDepthHere = box_ceiling.maxz-box_ceiling.minz+2-2*roofCounter
+				if roofWidthHere > 0 and roofDepthHere > 0:
+					box_roof = BoundingBox((box_ceiling.minx-1+roofCounter,box_ceiling.miny+1+roofCounter,box_ceiling.minz-1+roofCounter),(roofWidthHere,1,roofDepthHere))
+					Settlevolver.fill(level, box_roof, MAT_ROOF)
+				else:
+					keepGoingRoof = False
+				roofCounter += 1
 			
 
 		y += levelheight-1
