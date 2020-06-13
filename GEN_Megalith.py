@@ -8,8 +8,10 @@ from random import randint, random
 def create(generatorName, level, boxGlobal, box, agents, allStructures, materialScans, agent):
 	print "Building a",generatorName,"at", box," by ",str(agent)
 	pattern = [ (10,10,10,0.2+0.8*random(),1.0),(0,0,0,0.5+0.5*random(),1.0) ]
+	for p in agent.pattern:
+		pattern.append(p)
 	
-	materials = [  (2,0), (13,0), (4,0), (1,1), (1,3), (1,5) ] # (208,0), Path block needs nothing on top
+	materials = [ (0,0),(98,0), (4,0), (1,1), (1,3), (1,5) ] # (208,0), Path block needs nothing on top.  (2,0), (13,0),
 	
 	y = box.maxy-1
 	#for y in xrange(box.miny, box.maxy):
@@ -28,16 +30,17 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	depth = box.maxz-box.minz
 	height = box.maxy-box.miny
 	
+	RADIUSMIN = 2
 	
 	diam = width
 	if depth < width:
 		diam = depth
-	radius = diam>>1
+	radius = randint(RADIUSMIN,diam>>1)
 	
 	RADIUS = radius
 	
 	SEGSIZE = 5
-	roofHeight = int(height/3)
+	roofHeight = 0 # int(height/3)
 	segments = int((height-roofHeight)/SEGSIZE)
 	
 	y = box.miny
@@ -52,9 +55,13 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 		radius += randint(-1,1)
 		if radius > RADIUS:
 			radius = RADIUS
-		if radius < 2:
-			radius = 2
+		if radius < RADIUSMIN:
+			radius = RADIUSMIN
 
+	for x in xrange(box.minx, box.maxx):
+		for z in xrange(box.minz, box.maxz):
+			if level.blockAt(x,box.miny,z) != 0:
+				Settlevolver.setBlockToGround(level, (x,box.miny-1,z), (98,0)) # Stone Brick
 	
 	# Draw the roof
 	
@@ -69,5 +76,8 @@ def drawCircle(level, pos, radius, materials, pattern):
 			dist = dx*dx+dz**dz
 			if dist < r2:
 				# Settlevolver.setBlockToGround(level, (x,y,z), (98,0)) # Stone Brick
+				#if level.blockAt(x,y-1,z) == 0:
+				#	Settlevolver.placeBlock(level, (x, y, z), materials.remove((0,0)), pattern)
 				Settlevolver.placeBlock(level, (x, y, z), materials, pattern)
+					
 	

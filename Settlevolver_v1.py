@@ -26,7 +26,7 @@ from math import pi, sin, cos, atan2, sqrt
 
 inputs = (
 		("Settlevolver", "label"),
-		("Number of iterations", 10),
+		("Number of iterations", 3),
 		("Time limit (Seconds)", 60),
 		("Number of agents", 8),
 		("Resource hunt radius", 4),
@@ -217,7 +217,8 @@ class Structures:
 	MINE = 5
 	MEGA = 6
 	BIRTHTREE = 7
-	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree"]
+	TOWER = 8
+	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower"]
 
 class EventLog:
 	def __init__(self):
@@ -427,12 +428,15 @@ def perform(level, box, options):
 
 	# Initialise agents
 	AGENTSMAX = options["Number of agents"]
-	agents = makeAgents(box,STARTTIME,AGENTSMAX)
-	for agent in agents:
-		eventLog.addEvent("[BORN] "+str(agent))
-		print agent
+
 
 	for loop in xrange(0, options["Number of iterations"]):
+		print "Simulation number:",str(loop)
+		agents = makeAgents(box,STARTTIME,AGENTSMAX)
+		for agent in agents:
+			eventLog.addEvent("[BORN] "+str(agent))
+			print agent
+		STARTTIME = time.clock()
 		allStructures = []
 
 		iterationCount = 0
@@ -497,12 +501,15 @@ def perform(level, box, options):
 							potentialStructureSize = randint(16,24),randint(5,16),randint(16,24)
 							structureType = Structures.MINE
 
-						elif random() <= -1.0: # BUILDCHANCE and resourceBlockID in Materials.MAT_SOLID:
+						elif random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_SOLID:
 							# Find a location to build a Castle/Tower
 							# ... possibly a temple up high
 							#print str(agent),"Build a castle, tower, or temple"
 							potentialStructureSize = randint(16,32),randint(16,32),randint(16,32)
-							structureType = Structures.MEGA
+							if random() < 0.7:
+								structureType = Structures.MEGA
+							else:
+								structureType = Structures.TOWER
 						else:
 							potentialStructureSize = 3,3,3
 							structureType = Structures.PATH
@@ -604,6 +611,8 @@ def perform(level, box, options):
 		renderBuildings(level, box, agents, allStructures, materialScans)
 	
 	eventLog.printEntries() # Move the chronicle into a book or two
+	level.markDirtyBox(box)
+	level.saveInPlace() # Checkpoint here
 	
 def profileLandscape(level, box, options):
 	'''
@@ -768,11 +777,12 @@ def createSign(level, x, y, z, texts): #abrightmoore - convenience method. Due t
 	level.setBlockDataAt(x,y-1,z,0)
 	#setBlock(level, (1,0), x, y-1, z)
 	control = TAG_Compound()
-	control["id"] = TAG_String("Sign")
-	control["Text1"] = TAG_String(texts[0])
-	control["Text2"] = TAG_String(texts[1])
-	control["Text3"] = TAG_String(texts[2])
-	control["Text4"] = TAG_String(texts[3])
+	control["id"] = TAG_String("minecraft:sign")
+	# control["TileEntity"] = TAG_String("minecraft:sign")
+	control["Text1"] = TAG_String("{\"text\":\""+texts[0]+"\"}")
+	control["Text2"] = TAG_String("{\"text\":\""+texts[1]+"\"}")
+	control["Text3"] = TAG_String("{\"text\":\""+texts[2]+"\"}")
+	control["Text4"] = TAG_String("{\"text\":\""+texts[3]+"\"}")
 	
 	control["x"] = TAG_Int(x)
 	control["y"] = TAG_Int(y)
