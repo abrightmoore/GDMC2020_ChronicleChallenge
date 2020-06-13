@@ -9,7 +9,7 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	print "Building a Cottage at", box," by ",str(agent)
 	
 	# What types of blocks may I use for construction?
-	resourceList = Settlevolver.findResourcesCloseToMe(((box.minx+box.maxx)>>1,(box.minz+box.maxz)>>1), materialScans, 8)
+	# resourceList = Settlevolver.findResourcesCloseToMe(((box.minx+box.maxx)>>1,(box.minz+box.maxz)>>1), materialScans, 8)
 	
 	# Settlevolver.fill(level, boxLocal, (35,3))
 	

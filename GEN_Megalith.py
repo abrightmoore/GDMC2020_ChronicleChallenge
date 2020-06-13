@@ -13,8 +13,61 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	
 	y = box.maxy-1
 	#for y in xrange(box.miny, box.maxy):
-	while y >= box.miny:
-		for z in xrange(box.minz, box.maxz):
-			for x in xrange(box.minx, box.maxx):
+	if False: # Debug - build a big chunky block
+		while y >= box.miny:
+			for z in xrange(box.minz, box.maxz):
+				for x in xrange(box.minx, box.maxx):
+					Settlevolver.placeBlock(level, (x, y, z), materials, pattern)
+			y -= 1
+		
+	
+	FENCE = 85,0
+	materials.append(FENCE)
+	
+	width = box.maxx-box.minx
+	depth = box.maxz-box.minz
+	height = box.maxy-box.miny
+	
+	
+	diam = width
+	if depth < width:
+		diam = depth
+	radius = diam>>1
+	
+	RADIUS = radius
+	
+	SEGSIZE = 5
+	roofHeight = int(height/3)
+	segments = int((height-roofHeight)/SEGSIZE)
+	
+	y = box.miny
+	
+	cx = (box.minx+box.maxx)>>1
+	cz = (box.minz+box.maxz)>>1
+	
+	while y < box.maxy:
+		for dy in xrange(0,SEGSIZE):
+			drawCircle(level,(cx,y+dy,cz), radius, materials, pattern)
+		y += SEGSIZE
+		radius += randint(-1,1)
+		if radius > RADIUS:
+			radius = RADIUS
+		if radius < 2:
+			radius = 2
+
+	
+	# Draw the roof
+	
+def drawCircle(level, pos, radius, materials, pattern):
+	cx, y, cz = pos
+	
+	r2 = radius*radius
+	for x in xrange(cx-radius, cx+radius+1):
+		for z in xrange(cz-radius, cz+radius+1):
+			dx = x-cx
+			dz = z-cz
+			dist = dx*dx+dz**dz
+			if dist < r2:
+				# Settlevolver.setBlockToGround(level, (x,y,z), (98,0)) # Stone Brick
 				Settlevolver.placeBlock(level, (x, y, z), materials, pattern)
-		y -= 1
+	
