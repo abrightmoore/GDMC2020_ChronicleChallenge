@@ -32,6 +32,14 @@ There is also a central hub platform in the settlement which hosts a ramshackle 
 
 The wall sections of buildings are patterned according to a spatial field unique to each agent. As you trace through the village you will see similar structure colours used in similar ways by the same 'person'.
 
+As each dwelling is built, an array of rooms is returned from the heirarchical generator which are intended to be used in populating the interiors. At the time of writing, this is left as an exercise for later as the experience last year was that successful interior generation was problematic for a range of reasons spanning from TileEntity glitches through to the complexity of rotating special blocks to reflect sensible placement rules.
+
+# THE CHRONICLE CHALLENGE
+
+One optional challenge is to provide lore in the world to enhance the experience of the settlement. In my solution I track events as the simulation unfolds and then report them in chronological order on the MCEdit console output at the end of the simulation attempt.
+
+As part of my response to the Chronicle challence, ingame signs are used to show which agent is responsible for the dwellings and structures they build. A list of named signs at the settlement hub are used to invoke the experience of exploring a well-played shared world.
+
 ![Farms and cottages](https://pbs.twimg.com/media/EadN7evUcAAVaGK?format=jpg&name=large)
 
 ![Settlement Example - Birch Wood](https://pbs.twimg.com/media/EabpICeU0AYOVVA?format=jpg&name=large)
