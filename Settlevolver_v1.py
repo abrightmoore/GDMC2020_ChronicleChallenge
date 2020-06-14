@@ -30,7 +30,7 @@ inputs = (
 		("Time limit (Seconds)", 60),
 		("Number of agents", 8),
 		("Resource hunt radius", 4),
-		("Chance to build", 0.18),
+		("Chance to build", 0.5),
 		("Chance of child", 0.5),
 		("Breeding range", 16),
 		("Seconds per year", 3),
@@ -631,7 +631,6 @@ def perform(level, box, options):
 
 		renderBuildings(level, box, agents, allStructures, materialScans)
 	
-	
 	eventLog.printEntries() # Move the chronicle into a book or two
 	level.markDirtyBox(box)
 	level.saveInPlace() # Checkpoint here
@@ -826,6 +825,8 @@ def createBirthTree(level, box, x, y, z, agent):
 	cx = (box.minx+box.maxx)>>1
 	cz = (box.minz+box.maxz)>>1
 	cy = (box.miny+int(height/3)+1+box.maxy)>>1
+	
+	setBlockToGround(level, (cx,box.miny,cz), agent.materials[randint(0,len(agent.materials)-1)])
 	
 	for y in xrange(box.miny, box.miny+int(height/3)):
 		placeBlock(level, (cx, y, cz), agent.materials, agent.pattern)

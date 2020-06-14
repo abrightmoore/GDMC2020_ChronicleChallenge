@@ -61,5 +61,45 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 
 
 	areas = GEN_Cottage.create(generatorName, level, boxGlobal, cottagebox, agents, allStructures, materialScans, agent)
+
+	# Carve some stairs down
+	dirx = 1
+	dirz = 0
+	x = box.minx+((box.maxx-box.minx)>>1)
+	z = box.minz
+
+	y = 255
+	counter = 0
+	while counter < 100000 and y > 16:
+		
+		for dy in xrange(0,4):
+			level.setBlockAt(x,y+dy,z,0)
+			level.setBlockDataAt(x,y+dy,z,0)
+		y -= 1		
+		counter += 1
+		x += dirx
+		z += dirz
+		if x >= box.maxx:
+			dirx = 0
+			dirz = 1
+			x = box.maxx-1
+			z = box.minz+1
+		elif z >= box.maxz:
+			dirx = -1
+			dirz = 0
+			x = box.maxx-2
+			z = box.maxz-1
+		elif x < box.minx:
+			dirx = 0
+			dirz = -1
+			x = box.minx
+			z = box.maxz-1
+		elif z < box.minz:
+			x = box.minx+1
+			z = box.minz 
+			dirx = 1
+			dirz = 0
+
+
 	
 	return areas
