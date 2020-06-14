@@ -1,4 +1,7 @@
 # GDMC2020_ChronicleChallenge
+
+![City](https://pbs.twimg.com/media/Ead3ly8VcAAn0jT?format=jpg&name=large)
+
 Procedural Settlement Generation. See https://twitter.com/GenDesignMC for details of the challenge
 
 You can review by development notes for 2020 on Twitter here: https://twitter.com/abrightmoore/status/1271037719431409669?s=20
