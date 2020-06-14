@@ -19,7 +19,7 @@ import time
 
 import pygame
 from pygame import Surface
-from pymclevel import alphaMaterials, BoundingBox, TAG_List, TAG_Byte, TAG_Int, TAG_Compound, TAG_Short, TAG_Float, TAG_Double, TAG_String, TAG_Long
+from pymclevel import alphaMaterials, BoundingBox, TAG_List, TAG_Byte, TAG_Int, TAG_Compound, TAG_Short, TAG_Float, TAG_Double, TAG_String, TAG_Long, ChunkNotPresent
 import random
 from random import random, randint
 from math import pi, sin, cos, atan2, sqrt
@@ -218,7 +218,8 @@ class Structures:
 	MEGA = 6
 	BIRTHTREE = 7
 	TOWER = 8
-	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower"]
+	HUB = 9
+	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower","Hub"]
 
 class EventLog:
 	def __init__(self):
@@ -246,7 +247,7 @@ class Agent:
 		self.alive = True
 		self.deathdate = None
 		self.direction = 2.0*pi*random()
-		self.speed = 1.5+1.0*random()
+		self.speed = 2.0+2.0*random()
 		# Each agent has their own 'style' of building, determined by an interference pattern
 		self.pattern = []
 		for i in xrange(0,randint(2,5)):
@@ -421,7 +422,8 @@ def perform(level, box, options):
 	eventLog = EventLog()
 	
 	STARTTIME = time.clock()
-
+	allStructures = []
+	
 	# Check the selection for items of interest
 	materialScans = profileLandscape(level,box,options)  # Check what type of landscape we've been handed...
 	print "Material Scans are now completed" #, materialScans
@@ -429,15 +431,34 @@ def perform(level, box, options):
 	# Initialise agents
 	AGENTSMAX = options["Number of agents"]
 
+	name = "The World Founder"
+	fname, sname = "The World","Founder"
+	x = (box.maxx+box.minx)>>1
+	z = (box.maxz+box.minz)>>1
+	age = 21
+	birthdate = time.localtime()
+	TheWorldFounder = Agent(fname, sname, (x,z), age, birthdate, [])
+
+	# Infrastructure: Make a special area to memorialise agents who have died
+	szx,szy,szz = 24,64,24
+	y = getHeightHere(level, box, x, z)
+	if y < 80:
+		y = 80
+	memorialLocation = x, y, z
+	memorialBox = BoundingBox((x-(szx>>1), y, z-(szz>>1)),(szx,szy,szz))
+	allStructures.append((TheWorldFounder,Structures.HUB,memorialBox))
+	TheWorldFounder.structures.append((Structures.HUB,memorialBox))
+	
+	# Make a special area to memorialise agents who are current at the end of the simulation
 
 	for loop in xrange(0, options["Number of iterations"]):
 		print "Simulation number:",str(loop)
+		STARTTIME = time.clock()
+
 		agents = makeAgents(box,STARTTIME,AGENTSMAX)
 		for agent in agents:
 			eventLog.addEvent("[BORN] "+str(agent))
 			print agent
-		STARTTIME = time.clock()
-		allStructures = []
 
 		iterationCount = 0
 		# Simulate and evolve
@@ -476,7 +497,7 @@ def perform(level, box, options):
 						structureType = Structures.PATH
 						# Build something... what? Determine what to build based on something in the landscape.
 						(resourceBlockID, resourceBlockData), (resourceX, resourceY, resourceZ) = resource
-						if random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_WATER:
+						if random() <= 2.0*BUILDCHANCE and resourceBlockID in Materials.MAT_WATER:
 							# Find a location to build a farm
 							# eventLog.addEvent("[PLAN] "+str(agent)+" Thought about building a farm")
 							# print str(agent),"Build a farm"
@@ -505,7 +526,7 @@ def perform(level, box, options):
 							# Find a location to build a Castle/Tower
 							# ... possibly a temple up high
 							#print str(agent),"Build a castle, tower, or temple"
-							potentialStructureSize = randint(16,32),randint(16,32),randint(16,32)
+							potentialStructureSize = randint(16,32),randint(16,24),randint(16,32)
 							if random() < 0.7:
 								structureType = Structures.MEGA
 							else:
@@ -609,6 +630,7 @@ def perform(level, box, options):
 	#		fill(level, box, (35,colour%16))  # Temp build a structure
 
 		renderBuildings(level, box, agents, allStructures, materialScans)
+	
 	
 	eventLog.printEntries() # Move the chronicle into a book or two
 	level.markDirtyBox(box)
@@ -788,9 +810,12 @@ def createSign(level, x, y, z, texts): #abrightmoore - convenience method. Due t
 		control["id"] = TAG_String("minecraft:sign")
 		control["Text1"] = TAG_String("{\"text\":\""+texts[0]+"\"}")
 		
-		chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
-		chunka.TileEntities.append(control)
-		chunka.dirty = True
+		try:
+			chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
+			chunka.TileEntities.append(control)
+			chunka.dirty = True
+		except ChunkNotPresent:
+			print "ChunkNotPresent",(int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE)
 
 def createBirthTree(level, box, x, y, z, agent):
 	# Make a tree shape in the unit box

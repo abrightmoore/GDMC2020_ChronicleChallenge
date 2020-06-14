@@ -147,6 +147,8 @@ def makeShaft(level, box, materials, pattern):
 	depth = 0
 	if y > 2:
 		depth = randint(box.miny>>2,box.miny)
+	if box.miny-depth < 1:
+		depth = depth>>1
 
 	# Delete everything above the shaft (trees and mountain overhangs, etc.
 	for i in xrange(y+2, 255):
