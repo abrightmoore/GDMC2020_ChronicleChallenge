@@ -693,7 +693,7 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 		if t != Structures.PATH:
 			print "Built the structure created by",agent.name
 			y = getHeightHere(level, box, b.minx, b.minz)
-			texts = [ Structures.Names[t], "Built by", agent.fname, agent.sname, ]
+			texts = [ Structures.Names[t], "Built by", agent.fname, agent.sname ]
 			createSign(level, b.minx, y+1, b.minz, texts)
 		
 		
@@ -770,26 +770,27 @@ def createSign(level, x, y, z, texts): #abrightmoore - convenience method. Due t
 	CHUNKSIZE = 16
 	STANDING_SIGN = 63
 	
-	level.setBlockAt(x,y,z,STANDING_SIGN)
-	level.setBlockDataAt(x,y,z,randint(0,15))
-	#setBlock(level, (STANDING_SIGN,randint(0,15)), x, y, z)
-	level.setBlockDataAt(x,y-1,z,1)
-	level.setBlockDataAt(x,y-1,z,0)
-	#setBlock(level, (1,0), x, y-1, z)
-	control = TAG_Compound()
-	# control["TileEntity"] = TAG_String("minecraft:sign")
-	control["x"] = TAG_Int(x)
-	control["Text4"] = TAG_String("{\"text\":\""+texts[3]+"\"}")
-	control["y"] = TAG_Int(y)
-	control["Text3"] = TAG_String("{\"text\":\""+texts[2]+"\"}")
-	control["z"] = TAG_Int(z)
-	control["Text2"] = TAG_String("{\"text\":\""+texts[1]+"\"}")
-	control["id"] = TAG_String("minecraft:sign")
-	control["Text1"] = TAG_String("{\"text\":\""+texts[0]+"\"}")
-	
-	chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
-	chunka.TileEntities.append(control)
-	chunka.dirty = True
+	if level.blockAt(x,y,z) != STANDING_SIGN: # Don't try to create a duplicate set of NBT - it confuses the game.
+		level.setBlockAt(x,y,z,STANDING_SIGN)
+		level.setBlockDataAt(x,y,z,randint(0,15))
+		#setBlock(level, (STANDING_SIGN,randint(0,15)), x, y, z)
+		level.setBlockDataAt(x,y-1,z,1)
+		level.setBlockDataAt(x,y-1,z,0)
+		#setBlock(level, (1,0), x, y-1, z)
+		control = TAG_Compound()
+		# control["TileEntity"] = TAG_String("minecraft:sign")
+		control["x"] = TAG_Int(x)
+		control["Text4"] = TAG_String("{\"text\":\""+texts[3]+"\"}")
+		control["y"] = TAG_Int(y)
+		control["Text3"] = TAG_String("{\"text\":\""+texts[2]+"\"}")
+		control["z"] = TAG_Int(z)
+		control["Text2"] = TAG_String("{\"text\":\""+texts[1]+"\"}")
+		control["id"] = TAG_String("minecraft:sign")
+		control["Text1"] = TAG_String("{\"text\":\""+texts[0]+"\"}")
+		
+		chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
+		chunka.TileEntities.append(control)
+		chunka.dirty = True
 
 def createBirthTree(level, box, x, y, z, agent):
 	# Make a tree shape in the unit box
