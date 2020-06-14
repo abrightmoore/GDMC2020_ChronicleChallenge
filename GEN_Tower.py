@@ -97,6 +97,10 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 									setBlock(level, box.minx+x, box.miny+y, box.minz+z, AIR)
 									setBlock(level, box.minx+x, box.miny+y+1, box.minz+z, AIR)
 									x = width
+	for x in xrange(box.minx, box.maxx):
+		for z in xrange(box.minz, box.maxz):
+			if level.blockAt(x,box.miny,z) != 0:
+				Settlevolver.setBlockToGround(level, (x,box.miny-1,z), (98,0)) # Stone Brick
 
 	print "Built!"
 	return areas # These are all the rooms

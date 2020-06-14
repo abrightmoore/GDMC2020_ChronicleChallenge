@@ -777,16 +777,16 @@ def createSign(level, x, y, z, texts): #abrightmoore - convenience method. Due t
 	level.setBlockDataAt(x,y-1,z,0)
 	#setBlock(level, (1,0), x, y-1, z)
 	control = TAG_Compound()
-	control["id"] = TAG_String("minecraft:sign")
 	# control["TileEntity"] = TAG_String("minecraft:sign")
-	control["Text1"] = TAG_String("{\"text\":\""+texts[0]+"\"}")
-	control["Text2"] = TAG_String("{\"text\":\""+texts[1]+"\"}")
-	control["Text3"] = TAG_String("{\"text\":\""+texts[2]+"\"}")
-	control["Text4"] = TAG_String("{\"text\":\""+texts[3]+"\"}")
-	
 	control["x"] = TAG_Int(x)
+	control["Text4"] = TAG_String("{\"text\":\""+texts[3]+"\"}")
 	control["y"] = TAG_Int(y)
+	control["Text3"] = TAG_String("{\"text\":\""+texts[2]+"\"}")
 	control["z"] = TAG_Int(z)
+	control["Text2"] = TAG_String("{\"text\":\""+texts[1]+"\"}")
+	control["id"] = TAG_String("minecraft:sign")
+	control["Text1"] = TAG_String("{\"text\":\""+texts[0]+"\"}")
+	
 	chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
 	chunka.TileEntities.append(control)
 	chunka.dirty = True
