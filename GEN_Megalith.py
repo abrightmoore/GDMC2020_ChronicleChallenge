@@ -73,7 +73,7 @@ def drawCircle(level, pos, radius, materials, pattern):
 		for z in xrange(cz-radius, cz+radius+1):
 			dx = x-cx
 			dz = z-cz
-			dist = dx*dx+dz**dz
+			dist = dx*dx+dz*dz
 			if dist < r2:
 				# Settlevolver.setBlockToGround(level, (x,y,z), (98,0)) # Stone Brick
 				#if level.blockAt(x,y-1,z) == 0:
