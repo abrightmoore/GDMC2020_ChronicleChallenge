@@ -151,7 +151,7 @@ def makeShaft(level, box, materials, pattern):
 		depth = depth>>1
 
 	# Delete everything above the shaft (trees and mountain overhangs, etc.
-	for i in xrange(y+2, 255):
+	for i in xrange(y+2, box.maxy):
 		for x in xrange(box.minx, box.maxx):
 			for z in xrange(box.minz, box.maxz):
 				level.setBlockAt(x,i,z,0)

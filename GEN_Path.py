@@ -17,7 +17,7 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 		for z in xrange(box.minz, box.maxz):
 			for x in xrange(box.minx, box.maxx):
 				bID = level.blockAt(x, y, z)
-				if bID not in Settlevolver.Materials.MAT_IGNORE and bID not in Settlevolver.Materials.MAT_WATER and bID not in Settlevolver.Materials.MAT_WOOD and bID not in Settlevolver.Materials.MAT_LAVA: # Approximate path by replacing blocks over solid blocks
+				if bID not in Settlevolver.Materials.MAT_IGNORE and bID not in Settlevolver.Materials.MAT_WATER and bID not in Settlevolver.Materials.MAT_WOOD and bID not in Settlevolver.Materials.MAT_LAVA and bID not in Settlevolver.Materials.DOOR: # Approximate path by replacing blocks over solid blocks.  and bID not in Settlevolver.Materials.ITEMS and bID not in Settlevolver.Materials.GLASSES
 					Settlevolver.placeBlock(level, (x, y, z), materials, pattern)
 					Settlevolver.setBlockToGround(level, (x, y, z), materials[randint(0,len(materials)-1)])
 		y -= 1

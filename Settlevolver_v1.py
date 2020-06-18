@@ -15,13 +15,19 @@
 
 #	Stop when time exceeded or no further action possible (no more land).
 
+# TODO:
+#  - Rails
+#  - Interiors (use the 'areas' object returned from renderBuildings.
+
+
+
 import time
 
 import pygame
 from pygame import Surface
 from pymclevel import alphaMaterials, BoundingBox, TAG_List, TAG_Byte, TAG_Int, TAG_Compound, TAG_Short, TAG_Float, TAG_Double, TAG_String, TAG_Long, ChunkNotPresent
 import random
-from random import random, randint
+from random import random, randint, choice
 from math import pi, sin, cos, atan2, sqrt
 
 inputs = (
@@ -208,6 +214,22 @@ class Materials:
 	MAT_SOLID = [ 3, 1, 12, 4 ] # Dirt, stone, sand, cobblestone
 	MATS_LIB = [ MAT_WATER, MAT_WOOD, MAT_ORE, MAT_LAVA, MAT_SOLID ]
 	MAT_IGNORE = [ 18, 161, 31, 38, 175, 0, 79, 78 ] # Things that should be ignored for landscape height determination
+	GLASSES = [ (22,0), (102,0), 
+				(95,0), (95,1), (95,2), (95,3), (95,4), (95,5), (95,6), (95,7), (95,8), (95,9), (95,10), (95,11), (95,12), (95,13), (95,14), (95,15),
+				(160,0), (160,1), (160,2), (160,3), (160,4), (160,5), (160,6), (160,7), (160,8), (160,9), (160,10), (160,11), (160,12), (160,13), (160,14), (160,15)
+			  ]
+	ITEMS = [ (23,2), (23,3), (23,4), (23,5),
+				 (61,2), (61,3), (61,4), (61,5),
+				 (47,0),
+				 (84,0),
+				 (92,0), (92,1), (92,2), (92,3), (92,4), (92,5), (92,6),
+				 (116,0),
+				 (118,0), (118,1), (118,2), (118,3),
+				 (117,0),
+				 (130,2), (130,3), (130,4), (130,5),
+				 (158,2), (158,3), (158,4), (158,5)
+				]
+	DOOR = [ 64, 193, 194, 195, 196, 197 ]
 
 class Structures:
 	PATH = 1
@@ -236,6 +258,7 @@ class EventLog:
 			print time.strftime("%H:%M:%S", ts),evt
 
 class Agent:
+	
 	def __init__(self, fname, sname, pos, age, birthdate, structures):
 		self.name = fname+" "+sname
 		self.sname = sname
@@ -263,6 +286,7 @@ class Agent:
 				self.materials.append((89,0))
 			else:
 				self.materials.append((169,0))
+			self.materials.append(Materials.GLASSES[randint(0,len(Materials.GLASSES)-1)])
 		baseMaterials = [ 251, 159, 35 ] # Concrete is 238 on bedrock
 		baseMaterialID = baseMaterials[randint(0,len(baseMaterials)-1)]
 		for i in xrange(0,randint(3,7)):
@@ -526,7 +550,7 @@ def perform(level, box, options):
 							# Find a location to build a Castle/Tower
 							# ... possibly a temple up high
 							#print str(agent),"Build a castle, tower, or temple"
-							potentialStructureSize = randint(16,32),randint(16,24),randint(16,32)
+							potentialStructureSize = randint(16,32),randint(16,28),randint(16,32)
 							if random() < 0.7:
 								structureType = Structures.MEGA
 							else:
@@ -704,6 +728,7 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 	# 1) Render a building of the type specified within the bounding box.
 	# 2) Sweep through and place the foundations
 	# 3) Connect some of them
+	MARKERS = False
 	
 	areas = []
 	
@@ -711,11 +736,83 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 		generatorName = "GEN_"+Structures.Names[t]
 		module = __import__(generatorName)
 		areas = module.create(generatorName, level, box, b, agents, allStructures, materialScans, agent) # This attempts to invoke the create() method on the nominated generator
-		if t != Structures.PATH:
+		if t != Structures.PATH and areas != None:
+			for area in areas:
+				# Put something inside
+				if random() > 0.5:
+					
+					cx = (area.maxx+area.minx)>>1
+					cz = (area.maxz+area.minz)>>1
+					objType = randint(1,2)
+					if objType == 1:
+						bID, bData = Materials.ITEMS[randint(0,len(Materials.ITEMS)-1)]
+
+						level.setBlockAt(cx,area.miny,cz,bID) # Block
+						level.setBlockDataAt(cx,area.miny,cz,bData)
+						if randint(1,3) == 1:
+							level.setBlockAt(cx,area.miny,cz,50) # Torch
+							level.setBlockDataAt(cx,area.miny,cz,5)
+						if MARKERS == True:
+							level.setBlockAt(cx, 255, cz, 89)
+							level.setBlockDataAt(cx, 255, cz, 0)
+						
+				# Do something with the walls?
+				if t == Structures.BLACKSMITH and random() < 0.5:
+						level.setBlockAt(cx+1,area.miny,cz+1,145) # Anvil
+						level.setBlockDataAt(cx+1,area.miny,cz+1,randint(0,11))
+						level.setBlockAt(cx+1,area.miny,cz-1,61) # Furnace
+						level.setBlockDataAt(cx+1,area.miny,cz-1,randint(2,5))
+				
+				if area.maxx-area.minx > 4 and area.maxz-area.minz > 4 and True: # 
+					# Place random doors
+					DOORRULES = [ (-1,0), (1,0), (0,1), (0,-1) ]
+					doorcount = randint(2,4)
+					
+					DOORMAT = Materials.DOOR[randint(0,len(Materials.DOOR)-1)]
+					
+					while doorcount > 0:
+						doorcount -=1
+						
+						rx, rz = DOORRULES.pop(randint(0,len(DOORRULES)-1))
+						dir = 0
+						if rx == -1:
+							dir = 2
+						if rx == 1:
+							dir = 0
+						if rz == -1:
+							dir = 1
+						if rz == 1:
+							dir = 3
+						if rx == 0:
+							rx = randint(area.minx,area.maxx-1)
+						if rz == 0:
+							rz = randint(area.minz,area.maxz-1)
+						if dir == 3:
+							level.setBlockAt(rx,area.miny,area.maxz,DOORMAT)
+							level.setBlockDataAt(rx,area.miny,area.maxz,dir)
+							level.setBlockAt(rx,area.miny+1,area.maxz,DOORMAT)
+							level.setBlockDataAt(rx,area.miny+1,area.maxz,dir+0x08)
+						if dir == 1:
+							level.setBlockAt(rx,area.miny,area.minz-1,DOORMAT)
+							level.setBlockDataAt(rx,area.miny,area.minz-1,dir)
+							level.setBlockAt(rx,area.miny+1,area.minz-1,DOORMAT)
+							level.setBlockDataAt(rx,area.miny+1,area.minz-1,dir+0x08)
+						if dir == 0:
+							level.setBlockAt(area.minx-1,area.miny,rz,DOORMAT)
+							level.setBlockDataAt(area.minx-1,area.miny,rz,dir)
+							level.setBlockAt(area.minx-1,area.miny+1,rz,DOORMAT)
+							level.setBlockDataAt(area.minx-1,area.miny+1,rz,dir+0x08)
+						if dir == 2:
+							level.setBlockAt(area.maxx,area.miny,rz,DOORMAT)
+							level.setBlockDataAt(area.maxx,area.miny,rz,dir)
+							level.setBlockAt(area.maxx,area.miny+1,rz,DOORMAT)
+							level.setBlockDataAt(area.maxx,area.miny+1,rz,dir+0x08)
+						
 			print "Built the structure created by",agent.name
 			y = getHeightHere(level, box, b.minx, b.minz)
 			texts = [ Structures.Names[t], "Built by", agent.fname, agent.sname ]
 			createSign(level, b.minx, y+1, b.minz, texts)
+			placeBlock(level, ( b.minx, y, b.minz), agent.materials, agent.pattern)
 		
 		
 
