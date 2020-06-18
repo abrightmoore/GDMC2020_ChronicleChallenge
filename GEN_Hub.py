@@ -3,6 +3,7 @@
 from pymclevel import BoundingBox
 import Settlevolver_v1 as Settlevolver
 import GEN_Cottage
+import GEN_Library
 
 def create(generatorName, level, boxGlobal, box, agents, allStructures, materialScans, agent):
 	# The hub is where we set out a lot of the settlement information and, if possible, lore
@@ -20,6 +21,10 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 
 	numAgents = len(agents)
 	counter = 0
+	
+	
+	GEN_Library.create(generatorName, level, boxGlobal, BoundingBox((box.maxx-1,y,box.maxz-1),(1,1,1)), agents, allStructures, materialScans, agent)
+	
 	x = box.minx+1
 	z = box.minz+1
 

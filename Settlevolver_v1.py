@@ -30,6 +30,7 @@ import random
 from random import random, randint, choice
 from math import pi, sin, cos, atan2, sqrt
 
+
 inputs = (
 		("Settlevolver", "label"),
 		("Number of iterations", 3),
@@ -763,7 +764,7 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 						level.setBlockAt(cx+1,area.miny,cz-1,61) # Furnace
 						level.setBlockDataAt(cx+1,area.miny,cz-1,randint(2,5))
 				
-				if area.maxx-area.minx > 4 and area.maxz-area.minz > 4 and True: # 
+				if area.maxx-area.minx > 2 and area.maxz-area.minz > 2 and True: # 
 					# Place random doors
 					DOORRULES = [ (-1,0), (1,0), (0,1), (0,-1) ]
 					doorcount = randint(2,4)
@@ -812,7 +813,10 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 			y = getHeightHere(level, box, b.minx, b.minz)
 			texts = [ Structures.Names[t], "Built by", agent.fname, agent.sname ]
 			createSign(level, b.minx, y+1, b.minz, texts)
-			placeBlock(level, ( b.minx, y, b.minz), agent.materials, agent.pattern)
+			
+			level.setBlockAt(b.minx, y, b.minz,1)
+			level.setBlockDataAt(b.minx, y, b.minz,0)
+			placeBlock(level, ( b.minx, y-1, b.minz), agent.materials, agent.pattern)
 		
 		
 
@@ -849,7 +853,9 @@ def placeBlock(level, position, materials, pattern):
 		valueHere += contribution
 	valueHere = abs(valueHere/float(len(pattern)))*float(len(materials))
 
-	blockID,blockData = materials[int(valueHere)%len(materials)]
+	blockID,blockData = 251,9
+	if len(materials) > 0:
+		blockID,blockData = materials[int(valueHere)%len(materials)]
 	level.setBlockAt(x,y,z,blockID)
 	level.setBlockDataAt(x,y,z,blockData)
 	
