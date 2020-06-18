@@ -30,7 +30,7 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	print settlementName
 
 	texts = []
-	texts.append("Welcome to"+newline+"   ~         ~~"+newline+"       _T"+newline+" ^^   // \\"+newline+"      ][O]"+newline+"   /''-I_I"+newline+"__/_  /   \ __"+newline+"  | II--'''' \\"+newline+"; '/__\,.--';|"+newline+":' |  | []  -|"+newline+"  ..    ..-''"+newline+"'  |[]|,.--''"+newline+settlementName+newline+".-~-.-~-.-~-.-~-.")
+	texts.append("Welcome to"+newline+"8888888888888888"+newline+"8000000000000008"+newline+"80MMMMMMMMMMMM08"+newline+"80MLLLLLLLLLLM08"+newline+"80MLCCCCCCCCLM08"+newline+newline+settlementName+newline+newline+"80MLCCCCCCCCLM08"+newline+"80MLLLLLLLLLLM08"+newline+"80MMMMMMMMMMMM08"+newline+"8000000000000008"+newline+"8888888888888888")
 
 
 	lineNumber = 1
@@ -41,6 +41,15 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 			texts.append(text)
 			text = ""
 		lineNumber += 1
+	
+	texts.append("There are "+str(len(allStructures))+newline+"structures built"+newline+"by "+str(len(agents))+" people.")
+	
+	texts.append("We hope you enjoy your visit.")
+	
+	texts.append(newline+"8888888888888888"+newline+"8000000000000008"+newline+"80MMMMMMMMMMMM08"+newline+"80MLLLLLLLLLLM08"+newline+"80MLCCCCCCCCLM08"+newline+newline+settlementName+newline+"Almanac"+newline+newline+"80MLCCCCCCCCLM08"+newline+"80MLLLLLLLLLLM08"+newline+"80MMMMMMMMMMMM08"+newline+"8000000000000008"+newline+"8888888888888888")
+	
+	for agent in agents:
+		texts.append(str(agent))
 	
 	theBook = makeBookNBT(texts)
 	placeChestWithItems(level, [theBook], cx, y, cz)
