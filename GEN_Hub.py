@@ -37,8 +37,12 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	dirz = 0
 	while counter < len(agents) and y < box.maxy:
 		texts = [ "", agents[counter].fname, agents[counter].sname, ""]
-		print "Marking player sign at hub",str(x),str(y),str(z),"for",texts
-		Settlevolver.createSign(level, x, y, z, texts)
+		print "Marking player sign and book at the hub",str(x),str(y),str(z),"for",texts
+		Settlevolver.createSign(level, x, y+1, z, texts)
+		
+		# book = GEN_Library.makeBookNBT(agents[counter].diary.getEntriesAsArray())
+		# GEN_Library.placeChestWithItems(level, [book], x, y, z)
+		
 		counter += 1
 		x += dirx
 		z += dirz
@@ -63,7 +67,6 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 			z = box.minz-1 
 			dirx = 1
 			dirz = 0
-
 
 	areas = GEN_Cottage.create(generatorName, level, boxGlobal, cottagebox, agents, allStructures, materialScans, agent)
 

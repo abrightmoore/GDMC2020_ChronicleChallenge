@@ -30,6 +30,8 @@ import random
 from random import random, randint, choice
 from math import pi, sin, cos, atan2, sqrt
 
+import GEN_Library
+
 
 inputs = (
 		("Settlevolver", "label"),
@@ -245,6 +247,32 @@ class Structures:
 	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower","Hub"]
 
 class EventLog:
+	LASTWORDS = [ "I hear a creaper. It must be quite close. Perhaps I should stop writi",
+					"Time to dig straight down!",
+					"I found a map. It shows treasure. I will go and seek my fortune!",
+					"How does TNT work again?",
+					"No matter how hungry I get, I shall not eat that monstrous flesh. Yet I am very hungry...",
+					"Lava. That looks neat.",
+					"I'll just quickly bonemeal this sapling that I am standing on.",
+					"I think the command I need to type is /kill @p",
+					"Oh look! A 1x1 hole.",
+					"I am off to the Nether.",
+					"How does fire work?",
+					"What does this potion do?",
+					"I hope this is not a trap",
+					"Torches are for wimps.",
+					"I can save the zombie villager. I just know it!",
+					"So many rattling bones...",
+					"If I don't get sleep soon, I fear what may become of me.",
+					"I'm a great swimmer! Watch me hold my breath!",
+					"Boats work in lava, right?",
+					"I need gold. I shall take it from the pig people.",
+					"I wish I had some armour.",
+					"Did I shut the door?",
+					
+				  ]
+				  
+				  
 	def __init__(self):
 		self.events = []
 		
@@ -253,6 +281,11 @@ class EventLog:
 		if True: # Debug
 			print time.localtime(),event
 			
+	def getEntriesAsArray(self):
+		entries = []
+		for ts, evt in self.events:
+			entries.append(time.strftime("%H:%M:%S", ts)+" "+evt)
+		return entries
 		
 	def printEntries(self):
 		for ts, evt in self.events:
@@ -270,6 +303,10 @@ class Agent:
 		self.structures = structures
 		self.alive = True
 		self.deathdate = None
+		self.diary = EventLog()
+		self.diary.addEvent("Secret Diary of\n"+self.name)
+		self.parents = []
+		self.children = []
 		self.direction = 2.0*pi*random()
 		self.speed = 2.0+2.0*random()
 		# Each agent has their own 'style' of building, determined by an interference pattern
@@ -306,6 +343,7 @@ class Agent:
 		if random() < chanceOfDeath:
 			self.alive = False
 			self.deathdate = time.localtime()
+			self.diary.addEvent(EventLog.LASTWORDS[randint(0,len(EventLog.LASTWORDS)-1)])
 			eventLog.addEvent("[DIED] "+str(self))
 			return False
 		else:
@@ -313,8 +351,8 @@ class Agent:
 			return True
 
 
-def makeAgents(box,now,AGENTSMAX):
-	agents = []
+def makeAgents(box,now,agents,AGENTSMAX):
+
 	names = [ None ]
 	for i in xrange(0,AGENTSMAX):
 		name = None
@@ -473,6 +511,8 @@ def perform(level, box, options):
 	memorialBox = BoundingBox((x-(szx>>1), y, z-(szz>>1)),(szx,szy,szz))
 	allStructures.append((TheWorldFounder,Structures.HUB,memorialBox))
 	TheWorldFounder.structures.append((Structures.HUB,memorialBox))
+
+	agents = []
 	
 	# Make a special area to memorialise agents who are current at the end of the simulation
 
@@ -480,7 +520,7 @@ def perform(level, box, options):
 		print "Simulation number:",str(loop)
 		STARTTIME = time.clock()
 
-		agents = makeAgents(box,STARTTIME,AGENTSMAX)
+		agents = makeAgents(box,STARTTIME,agents,AGENTSMAX)
 		for agent in agents:
 			eventLog.addEvent("[BORN] "+str(agent))
 			print agent
@@ -576,6 +616,7 @@ def perform(level, box, options):
 							agent.structures.append((structureType,newBox))
 							if structureType != Structures.PATH:
 								eventLog.addEvent("[BUILD] "+str(agent)+" Built a "+Structures.Names[structureType]+" of dimension "+str(newBox))
+								agent.diary.addEvent("I built a "+Structures.Names[structureType]+" near "+str(newBox.minx)+","+str(newBox.miny)+","+str(newBox.minz))
 						
 					# Move somewhere else to try again/ (was Brownian motion)
 					x,z = agent.pos
@@ -639,6 +680,13 @@ def perform(level, box, options):
 								newAgent.structures.append((Structures.BIRTHTREE,babyBox))
 								allStructures.append((newAgent,Structures.BIRTHTREE,babyBox))
 								keepGoing = True
+								agent.children.append(newAgent)
+								agent2.children.append(newAgent)
+								newAgent.parents.append(agent)
+								newAgent.parents.append(agent2)
+								agent.diary.addEvent("My child "+newAgent.name+" born to "+agent2.name+" and me!")
+								agent2.diary.addEvent("My child "+newAgent.name+" born to "+agent.name+" and me!")
+								newAgent.diary.addEvent("I was born to "+agent.name+" and "+agent2.name+".")
 								eventLog.addEvent("[BORN] "+str(newAgent)+" to "+str(agent)+" and "+str(agent2) )
 				for baby in babyAgents:
 					agents.append(baby)
@@ -654,7 +702,16 @@ def perform(level, box, options):
 	#		colour = type # Hack... for debug
 	#		fill(level, box, (35,colour%16))  # Temp build a structure
 
-		renderBuildings(level, box, agents, allStructures, materialScans)
+	renderBuildings(level, box, agents, allStructures, materialScans)
+		
+	# Place chests where the agents ended up	
+	for agent in agents:
+		book = GEN_Library.makeBookNBT(agent.diary.getEntriesAsArray())
+		x,z = agent.pos
+		y = getHeightHere(level, box, x, z)
+		GEN_Library.placeChestWithItems(level, [book], x, y, z)
+		print "Chest placed with diary for "+str(agent)
+
 	
 	eventLog.printEntries() # Move the chronicle into a book or two
 	level.markDirtyBox(box)
@@ -898,7 +955,7 @@ def createSign(level, x, y, z, texts): #abrightmoore - convenience method. Due t
 		level.setBlockAt(x,y,z,STANDING_SIGN)
 		level.setBlockDataAt(x,y,z,randint(0,15))
 		#setBlock(level, (STANDING_SIGN,randint(0,15)), x, y, z)
-		level.setBlockDataAt(x,y-1,z,1)
+		level.setBlockAt(x,y-1,z,1)
 		level.setBlockDataAt(x,y-1,z,0)
 		#setBlock(level, (1,0), x, y-1, z)
 		control = TAG_Compound()
