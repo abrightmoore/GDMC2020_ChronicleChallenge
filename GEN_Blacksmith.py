@@ -6,6 +6,8 @@ from random import randint, random
 from pymclevel import BoundingBox
 
 def create(generatorName, level, boxGlobal, box, agents, allStructures, materialScans, agent):
+	print "Building a",generatorName,"at", box," by ",str(agent)
+	
 	areas = GEN_Cottage.create(generatorName, level, boxGlobal, box, agents, allStructures, materialScans, agent)
 	
 	# Create a chimney or two

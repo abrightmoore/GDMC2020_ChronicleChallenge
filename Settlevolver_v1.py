@@ -244,7 +244,8 @@ class Structures:
 	BIRTHTREE = 7
 	TOWER = 8
 	HUB = 9
-	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower","Hub"]
+	FORT = 10
+	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower","Hub","Fort"]
 
 class EventLog:
 	LASTWORDS = [ "I hear a creaper. It must be quite close. Perhaps I should stop writi",
@@ -593,6 +594,9 @@ def perform(level, box, options):
 							#print str(agent),"Build a castle, tower, or temple"
 							potentialStructureSize = randint(16,32),randint(16,28),randint(16,32)
 							if random() < 0.7:
+								potentialStructureSize = randint(32,96),randint(32,96),randint(32,96)
+								structureType = Structures.FORT
+							elif random() < 0.3:
 								structureType = Structures.MEGA
 							else:
 								structureType = Structures.TOWER

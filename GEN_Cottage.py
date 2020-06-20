@@ -6,7 +6,7 @@ from pymclevel import BoundingBox
 from random import randint, random
 
 def create(generatorName, level, boxGlobal, box, agents, allStructures, materialScans, agent):
-	print "Building a Cottage at", box," by ",str(agent)
+	print "Building a",generatorName,"at", box," by ",str(agent)
 	
 	# What types of blocks may I use for construction?
 	# resourceList = Settlevolver.findResourcesCloseToMe(((box.minx+box.maxx)>>1,(box.minz+box.maxz)>>1), materialScans, 8)
