@@ -572,7 +572,7 @@ def perform(level, box, options):
 						elif random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_LAVA:
 							# Find a location to build a Blacksmith
 							#print str(agent),"Build a blacksmith"
-							potentialStructureSize = randint(8,12),randint(5,8),randint(8,12)
+							potentialStructureSize = randint(12,16),randint(5,8),randint(12,16)
 							structureType = Structures.BLACKSMITH
 							
 						elif random() <= BUILDCHANCE and resourceBlockID in Materials.MAT_WOOD:
@@ -816,8 +816,10 @@ def renderBuildings(level, box, agents, allStructures, materialScans):
 						
 				# Do something with the walls?
 				if t == Structures.BLACKSMITH and random() < 0.5:
+					if level.blockAt(cx+1,area.miny-1,cz+1) != 0:
 						level.setBlockAt(cx+1,area.miny,cz+1,145) # Anvil
 						level.setBlockDataAt(cx+1,area.miny,cz+1,randint(0,11))
+					if level.blockAt(cx+1,area.miny-1,cz-1) != 0:
 						level.setBlockAt(cx+1,area.miny,cz-1,61) # Furnace
 						level.setBlockDataAt(cx+1,area.miny,cz-1,randint(2,5))
 				
