@@ -51,7 +51,7 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	for agent in agents:
 		texts.append(str(agent))
 	
-	theBook = makeBookNBT(texts)
+	theBook = makeBookNBT(texts) # Settlement Almanac - location of all the graves with personal stories
 	placeChestWithItems(level, [theBook], cx, y, cz)
 
 def placeChestWithItems(level, things, x, y, z):
@@ -71,13 +71,16 @@ def placeChestWithItems(level, things, x, y, z):
 		items = TAG_List()
 		control["Items"] = items
 		slot = 0
+		print things
 		for thing in things:
-			item = TAG_Compound()
-			items.append(item)
-			item["Slot"] = TAG_Byte(slot)
-			slot += 1
-			for key in thing.keys():
-				item[key] = thing[key]
+			# if thing["id"].value != "minecraft:Nothing": # Handle empty slots
+			if True:
+				item = TAG_Compound()
+				items.append(item)
+				item["Slot"] = TAG_Byte(slot)
+				slot += 1
+				for key in thing.keys():
+					item[key] = thing[key]
 		
 		try:
 			chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
@@ -85,6 +88,27 @@ def placeChestWithItems(level, things, x, y, z):
 			chunka.dirty = True
 		except ChunkNotPresent:
 			print "ChunkNotPresent",(int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE)
+
+def makeItemNBTWithDefaults(id):
+	return makeItemNBT(id, 1, 0)
+
+def makeItemNBT(id, count, damage):
+	'''
+		Prepare an item of the form:
+	
+	TAG_Compound({
+      "Slot": TAG_Byte(21),
+      "id": TAG_String(u'minecraft:iron_boots'),
+      "Count": TAG_Byte(1),
+      "Damage": TAG_Short(0),
+    }),
+	'''
+	
+	item = TAG_Compound()
+	item["id"] = TAG_String("minecraft:"+id)
+	item["Count"] = TAG_Byte(int(count))
+	item["Damage"] = TAG_Short(int(damage))
+	return item
 
 def makeBookNBT(texts):
 	book = TAG_Compound()

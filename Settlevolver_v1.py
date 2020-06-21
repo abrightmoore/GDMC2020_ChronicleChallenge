@@ -27,7 +27,7 @@ import pygame
 from pygame import Surface
 from pymclevel import alphaMaterials, BoundingBox, TAG_List, TAG_Byte, TAG_Int, TAG_Compound, TAG_Short, TAG_Float, TAG_Double, TAG_String, TAG_Long, ChunkNotPresent
 import random
-from random import random, randint, choice
+from random import random, randint, choice, shuffle
 from math import pi, sin, cos, atan2, sqrt
 
 import GEN_Library
@@ -233,6 +233,9 @@ class Materials:
 				 (158,2), (158,3), (158,4), (158,5)
 				]
 	DOOR = [ 64, 193, 194, 195, 196, 197 ]
+	THINGS = [
+		"leather", "carrot", "beetroot", "iron_helmet", "iron_boots", "iron_leggings", "leather_leggings", "leather_helmet", "leather_boots", "clock", "compass", "golden_shovel", "diamond_shovel", "wooden_shovel", "stone_shovel", "iron_shovel", "flint_and_steel", "shears", "golden_chestplate", "diamond_chestplate", "chainmail_chestplate", "iron_chestplate", "leather_chestplate", "rotten_flesh", "bone", "dye"
+	]
 
 class Structures:
 	PATH = 1
@@ -707,20 +710,44 @@ def perform(level, box, options):
 	#		fill(level, box, (35,colour%16))  # Temp build a structure
 
 	renderBuildings(level, box, agents, allStructures, materialScans)
-		
+
+	makeGraveSite(level, box, agents)
+	
+	eventLog.printEntries() # Move the chronicle into a book or two
+	try:
+		level.markDirtyBox(box)
+	except ChunkNotPresent:
+		print "ChunkNotPresent error"
+	level.saveInPlace() # Checkpoint here
+
+def makeGraveSite(level, box, agents):
 	# Place chests where the agents ended up	
 	for agent in agents:
 		book = GEN_Library.makeBookNBT(agent.diary.getEntriesAsArray())
 		x,z = agent.pos
 		y = getHeightHere(level, box, x, z)
-		GEN_Library.placeChestWithItems(level, [book], x, y, z)
+		chestItems = [book]
+		for i in xrange(0,randint(1,20)):
+			if random() < 0.5:
+				chestItems.append(GEN_Library.makeItemNBTWithDefaults(Materials.THINGS[randint(0,len(Materials.THINGS)-1)]))
+			#else:
+			#	chestItems.append(GEN_Library.makeItemNBTWithDefaults("Nothing")) # Special placeholder for an empty slot. Ignored when making the chest...
+		shuffle(chestItems)
+		GEN_Library.placeChestWithItems(level, chestItems, x, y, z)
+		# Put a sign up here.
+		y = getHeightHere(level, box, x, z)
+		texts = [ "HERE LIES", agent.fname, agent.sname, "Died at age "+str(agent.age) ]
+		createSign(level, x, y+2, z, texts)
+		
+		level.setBlockAt(x, y+1, z,1)
+		level.setBlockDataAt(x, y+1, z,0)
+		placeBlock(level, ( x, y-1, z), agent.materials, agent.pattern)		
+	
 		print "Chest placed with diary for "+str(agent)
+	
+	# Place random treasure somewhere near the place they perished
 
-	
-	eventLog.printEntries() # Move the chronicle into a book or two
-	level.markDirtyBox(box)
-	level.saveInPlace() # Checkpoint here
-	
+
 def profileLandscape(level, box, options):
 	'''
 		The strategy here is to 'sample' the landscape for resources and geometry.
