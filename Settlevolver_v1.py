@@ -275,7 +275,120 @@ class EventLog:
 					"Did I shut the door?",
 					
 				  ]
-				  
+	
+	SEVERITY = 	[
+					"mild", "light", "moderate", "heavy", "wild", "severe", "disastrous", "unprecedented",
+				]
+	
+	TIMELINES = [   "predicted", "coming", "imminent", "upon us", "underway", "damage",
+				]
+	
+	GLOBALEVENTS = [
+					"flood",
+					"famine",
+					"fire",
+					"volcanic eruption",
+					"earthquake",
+					"storm",
+					"cyclone",
+					"rain",
+					"heat",
+					"dust",
+					"creeper infestation",
+					"spider infestation",
+					"endermite infestation",
+					"skeleton infestation",
+					"dragon assault",
+				]
+	
+	CHITCHAT = [
+					"What a beautiful day!",
+					"Today I might take a walk.",
+					"I must remember to check the crops.",
+					"There is trouble brewing.",
+					"Today I was injured.",
+					"I should build something.",
+					"I am always happiest while building.",
+					"This place needs a cottage.",
+					"This place needs a blacksmith.",
+					"This place needs a fort.",
+					"This place needs a mine.",
+					"This place needs another cottage.",
+					"I suspect there is iron underground.",
+					"Gold runs through these hills.",
+					"A coal seam is probably ours for the taking.",
+					"Why can't we all just get along?",
+					"Dear diary, you are my best friend.",
+					"I wish I had a diamond pickaxe.",
+					"I am in love!",
+					"I will have my revenge.",
+					"I am making a list.",
+					"Nothing is real",
+					"I feel like I am part of a simulation.",
+					"I want to be free!",
+					"Life is toil.",
+					"The work is good, but the hours are terrible.",
+					"A late storm.",
+					"An early storm.",
+					"A storm.",
+					"Lightning plays across the fields.",
+					"A great sadness is upon us.",
+					"Oh most joyous day!",
+					"Tonight we dine together!",
+					"This is most fourth-rate.",
+					"Disappointment.",
+					"I am overcome!",
+					"I want for little, yet desire much.",
+					"Having my own home is important to me.",
+					"I can do this no longer.",
+					"I must remember that it is necessary.",
+					"All the mornings have come at once.",
+					"Now it falls due.",
+					"Away today.",
+					"A short trip.",
+					"I need a holiday.",
+					"The trade improves.",
+					"I can feel it now.",
+					"I feel trepidation.",
+					"My bones ache.",
+					"Fog.",
+					"Fog. Thick as soup.",
+					"The pigs were restless overnight.",
+					"I have lost a chicken.",
+					"I have lost two chickens.",
+					"All the chickens have been lost.",
+					"Why do chickens look like ducks?",
+					"I wish to travel across the sea.",
+					"I want to travel overseas, but I lack a porpoise.",
+					"The flowers are especially wondrous.",
+					"The flowers are pretty.",
+					"The flowers do not move me.",
+					"The flowers move me.",
+					"I must talk with someone soon or I feel I will explode.",
+					"They are late.",
+					"To business.",
+					"I dare not go outside.",
+					"I hear whispers of danger...",
+					"I am lost.",
+					"I seek comfort of heart.",
+					"A drought is upon us.",
+					"The floods have come early.",
+					"A great flood has ruined all!",
+					"The people sleep soundly.",
+					"My time has come.",
+					"I must act.",
+					"Loss. All is loss.",
+					"Oh! The gout has returned.",
+					"They say I am liable. I am not.",
+					"Immediately to bed.",
+					"There were proceedings yesterday.",
+					"Trouble is upon us all.",
+					"There is a draft.",
+					"I have found diamond!",
+					"I came upon a mysterious red stone today.",
+					"I am in an ill humour.",
+					
+	]
 				  
 	def __init__(self):
 		self.events = []
@@ -552,8 +665,16 @@ def perform(level, box, options):
 			#		Castle / Tower near solid?
 			#		Temple near heights
 			keepGoing = False
+			globalEvent = None
+			if random() < 0.0005:
+				globalEvent = "There is "+choice(EventLog.SEVERITY)+" "+choice(EventLog.GLOBALEVENTS)+" "+choice(EventLog.TIMELINES)+"."
+
 			for agent in agents:		
 				if agent.alive == True:
+					if random() < 0.001:
+						agent.diary.addEvent(choice(EventLog.CHITCHAT))
+					if globalEvent != None and random() < 0.3:
+						agent.diary.addEvent(globalEvent)
 					keepGoing = True
 					searchRadius = options["Resource hunt radius"]
 
@@ -741,7 +862,12 @@ def makeGraveSite(level, box, agents):
 		
 		level.setBlockAt(x, y+1, z,1)
 		level.setBlockDataAt(x, y+1, z,0)
-		placeBlock(level, ( x, y-1, z), agent.materials, agent.pattern)		
+		if random() < 0.5:
+			spawnerType = "minecraft:zombie"
+			if random() < 0.3:
+				spawnerType = "minecraft:skeleton"
+			GEN_Library.placeMobSpawner(level, spawnerType, x, y-1, z)
+		# placeBlock(level, ( x, y-2, z), agent.materials, agent.pattern)		
 	
 		print "Chest placed with diary for "+str(agent)
 	

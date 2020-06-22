@@ -54,6 +54,32 @@ def create(generatorName, level, boxGlobal, box, agents, allStructures, material
 	theBook = makeBookNBT(texts) # Settlement Almanac - location of all the graves with personal stories
 	placeChestWithItems(level, [theBook], cx, y, cz)
 
+def placeMobSpawner(level, type, x, y, z):
+	CHUNKSIZE = 16
+	SPAWNER = 52
+	
+	if level.blockAt(x,y,z) != SPAWNER: # Don't try to create a duplicate set of NBT - it confuses the game.
+		level.setBlockAt(x,y,z,SPAWNER)
+		level.setBlockDataAt(x,y,z,0)
+		
+		control = TAG_Compound()
+		control["x"] = TAG_Int(x)
+		control["y"] = TAG_Int(y)
+		control["z"] = TAG_Int(z)
+		# control["id"] = TAG_String("minecraft:mob_spawner")
+
+		nbt = makeMobSpawnerNBT(type)
+		for key in nbt.keys():
+			control[key] = nbt[key]
+		
+		try:
+			chunka = level.getChunk((int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE))
+			chunka.TileEntities.append(control)
+			chunka.dirty = True
+		except ChunkNotPresent:
+			print "ChunkNotPresent",(int)(x/CHUNKSIZE), (int)(z/CHUNKSIZE)
+	
+
 def placeChestWithItems(level, things, x, y, z):
 	CHUNKSIZE = 16
 	CHEST = 54
@@ -118,14 +144,72 @@ def makeBookNBT(texts):
 
 	tag = TAG_Compound()
 	pages = TAG_List()
+	LIMIT = 150
+	discarded = False
 	for page in texts:
-		pages.append(TAG_String(page))
+		if len(pages) < LIMIT:
+			pages.append(TAG_String(page))
+		else:
+			discarded = True
+	if discarded == True:
+		print "WARNING: Book length exceeded "+str(LIMIT)+" pages. Truncated!"
 	book["tag"] = tag
 	tag["pages"] = pages
 	return book
 
+def makeMobSpawnerNBT(type):
+	obj = TAG_Compound()
+	obj["id"] = TAG_String("minecraft:mob_spawner")
+	obj["MaxNearbyEntities"] = TAG_Short(6)
+	obj["RequiredPlayerRange"] = TAG_Short(8)
+	obj["SpawnCount"] = TAG_Short(1)
+	obj["MaxSpawnDelay"] = TAG_Short(800)
+	obj["Delay"] = TAG_Short(371)
+	obj["SpawnRange"] = TAG_Short(4)
+	obj["MinSpawnDelay"] = TAG_Short(200)
+	spawnData = TAG_Compound()
+	obj["SpawnData"] = spawnData
+	spawnData["id"] = TAG_String(type)
+	
+	spawnPotentials = TAG_List()
+	obj["SpawnPotentials"] = spawnPotentials
+	entity = TAG_Compound()
+	spawnPotentials.append(entity)
+
+	entity["Entity"] = TAG_Compound()
+	entity["Entity"]["id"] = TAG_String(type)
+	entity["Weight"] = TAG_Int(1)
+	
+	return obj
+
 '''
 EXAMPLE
+
+
+TAG_Int(2130) TAG_Int(64) TAG_Int(-25) TAG_Compound({
+  "MaxNearbyEntities": TAG_Short(6),
+  "RequiredPlayerRange": TAG_Short(16),
+  "SpawnCount": TAG_Short(4),
+  "SpawnData": TAG_Compound({
+    "id": TAG_String(u'minecraft:zombie'),
+  }),
+  "MaxSpawnDelay": TAG_Short(800),
+  "Delay": TAG_Short(371),
+  "x": TAG_Int(2130),
+  "y": TAG_Int(64),
+  "z": TAG_Int(-25),
+  "id": TAG_String(u'minecraft:mob_spawner'),
+  "SpawnRange": TAG_Short(4),
+  "MinSpawnDelay": TAG_Short(200),
+  "SpawnPotentials": TAG_List([
+    TAG_Compound({
+      "Entity": TAG_Compound({
+        "id": TAG_String(u'minecraft:zombie'),
+      }),
+      "Weight": TAG_Int(1),
+    }),
+  ]),
+})
 
 
 TAG_Int(-1611) TAG_Int(64) TAG_Int(2139) TAG_Compound({
