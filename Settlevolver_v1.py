@@ -35,7 +35,7 @@ import GEN_Library
 
 inputs = (
 		("Settlevolver", "label"),
-		("Number of iterations", 3),
+		("Number of iterations", 1),
 		("Time limit (Seconds)", 60),
 		("Number of agents", 8),
 		("Resource hunt radius", 4),
@@ -248,7 +248,8 @@ class Structures:
 	TOWER = 8
 	HUB = 9
 	FORT = 10
-	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower","Hub","Fort"]
+	SPIRE = 11
+	Names = ["Nothing","Path","Farm","Cottage","Blacksmith","Mine","Megalith","BirthTree","Tower","Hub","Fort","Spire"]
 
 class EventLog:
 	LASTWORDS = [ "I hear a creaper. It must be quite close. Perhaps I should stop writi",
@@ -717,9 +718,12 @@ def perform(level, box, options):
 							# ... possibly a temple up high
 							#print str(agent),"Build a castle, tower, or temple"
 							potentialStructureSize = randint(16,32),randint(16,28),randint(16,32)
-							if random() < 0.7:
+							if random() < 0.5:
 								potentialStructureSize = randint(32,96),randint(32,96),randint(32,96)
 								structureType = Structures.FORT
+							elif random() < 0.4:
+								potentialStructureSize = randint(8,16)*2+1,randint(48,96),randint(8,16)*2+1
+								structureType = Structures.SPIRE
 							elif random() < 0.3:
 								structureType = Structures.MEGA
 							else:
