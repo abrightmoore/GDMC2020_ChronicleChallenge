@@ -1,5 +1,7 @@
 # GDMC2020_ChronicleChallenge
 
+Simulated agents wander the landscape. They construct buildings based on the type of materials within the local area as well as using their own artistic style. Occasionally agents will make a new child who inherits artistic characteristics from the parent.
+
 ![City](https://pbs.twimg.com/media/Ead3ly8VcAAn0jT?format=jpg&name=large)
 
 Procedural Settlement Generation. See https://twitter.com/GenDesignMC for details of the challenge
@@ -28,20 +30,22 @@ The type of dwelling and style of dwelling plot is determined by the resources f
 * Woods allow cottages
 * Lava permits blacksmith, which is a very large cottage plot currently.
 * Ore resources permit vertical mineshafts, with an industrial set of buildings above ground and a mine head building on top.
-* Stone allows ancient crumbling structures (which can also be built upon in later simulation iterations) and round towers.
+* Stone allows ancient crumbling structures (which can also be built upon in later simulation iterations), castle-like forts, round towers, or mystrious impenetrable wizards spires.
 * An occasional stone path section is placed showing the areas that agents have wandered through.
 
 There is also a central hub platform in the settlement which hosts a ramshackle tower, as well as the names of selected agents that have built out the settlement on signs. This is intended to mimic the special spawn area in shared online servers.
 
 The wall sections of buildings are patterned according to a spatial field unique to each agent. As you trace through the village you will see similar structure colours used in similar ways by the same 'person'.
 
-As each dwelling is built, an array of rooms is returned from the heirarchical generator which are intended to be used in populating the interiors. At the time of writing, this is left as an exercise for later as the experience last year was that successful interior generation was problematic for a range of reasons spanning from TileEntity glitches through to the complexity of rotating special blocks to reflect sensible placement rules.
+As each dwelling is built, an array of rooms is returned from the heirarchical generator which are intended to be used in populating the interiors. The interiors have been 'dressed' with functional blocks where appropriate, and doors added. As these are all private residences, access is not always convenient for the casual interloper - consider leaving people to their privacy.
 
 # THE CHRONICLE CHALLENGE
 
 One optional challenge is to provide lore in the world to enhance the experience of the settlement. In my solution I track events as the simulation unfolds and then report them in chronological order on the MCEdit console output at the end of the simulation attempt.
 
 As part of my response to the Chronicle challence, ingame signs are used to show which agent is responsible for the dwellings and structures they build. A list of named signs at the settlement hub are used to invoke the experience of exploring a well-played shared world.
+
+Seek out the chest on the corner of the central hub. Within is the settlement almanac, consisting of the settlement name, and details of all the 'builders' who contributed to it. Within the almanac is the last known location of each builder. At that location you will find a personal diary, though you will need to desecrate the grave to read it! As an additional challenge, the graves may be haunted by the spirit of the dead...
 
 ![Farms and cottages](https://pbs.twimg.com/media/EadN7evUcAAVaGK?format=jpg&name=large)
 
